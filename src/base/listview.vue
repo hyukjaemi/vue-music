@@ -1,19 +1,24 @@
 <template>
-    <scroll class="listview" :data="data" ref="listview">
+    <scroll class="listview" :data="data" ref="listview" 
+            :listenScroll="listenScroll" :probeType="probeType" @scroll="scroll">
+        <!-- 歌手列表 -->
         <ul>
-            <li v-for="group in data" class="list-group" :key="group.id" ref="listgroup">
+            <li v-for="group in data" class="list-group" 
+                :key="group.id" ref="listgroup" >
                 <h2 class="list-group-title">{{group.title}}</h2>
                 <ul>
-                    <li v-for="item in group.items" class="list-group-item" :key="item.id">
-                        <img :src="item.avatar" class="avatar">
+                    <li @click="selectItem(item)" v-for="item in group.items" class="list-group-item" :key="item.id">
+                        <img v-lazy="item.avatar" class="avatar">
                         <span class="name">{{item.name}}</span>
                     </li>
                 </ul>
             </li>
         </ul>
+        <!-- 字母快速入口 -->
         <div class="list-shortcut" @touchstart="onFastclick" @touchmove.stop.prevent="onFastMove">
             <ul>
-                <li v-for="(item,index) in fastList" :key="item.id" class="item" :data-index="index">
+                <li v-for="(item,index) in fastList" :key="item.id" 
+                    class="item" :class="{'current':currentIndex===index}"  :data-index="index">
                     {{item}}
                 </li>
             </ul>
@@ -29,12 +34,21 @@ import {getData} from '../common/js/dom'
                 type:Array,
                 default:[]
             }
+        }, 
+        data(){
+            return {
+                scrollY:-1,
+                currentIndex:0,  //当前位置(高亮)
+            }
         },
         components:{
             Scroll
         },
         created(){
             this.touch ={}
+            this.listenScroll = true;   //监听
+            this.listHeight = []
+            this.probeType = 3
         },
         computed:{
             fastList(){
@@ -44,6 +58,9 @@ import {getData} from '../common/js/dom'
             }
         },
         methods:{
+            selectItem(item){
+                this.$emit("select",item);
+            },
             onFastclick(e){
                 //字母
                 var anchorIndex = getData(e.target,"index");
@@ -59,8 +76,58 @@ import {getData} from '../common/js/dom'
                 let anchorIndex = parseInt(this.touch.anchorIndex) + delta;
                 this._scrollTo(anchorIndex);
             },
+            scroll(pos){
+                this.scrollY = pos.y
+            },
             _scrollTo(index){
+                if(index==null){
+                    return
+                }
+                if(index<0){
+                    index = 0
+                }else if(index > this.listHeight.length -2){
+                    index = this.listHeight.length -2;
+                }
+                this.scrollY = -this.listHeight[index];
                 this.$refs.listview.scrollToElement(this.$refs.listgroup[index],0)
+            },
+            _calculateHeight(){
+                this.listHeight = [];
+                var list = this.$refs.listgroup;
+                let height = 0;
+                this.listHeight.push(height);
+                for(var i=0;i<list.length;i++){
+                    var item = list[i];
+                    height += item.clientHeight;
+                    this.listHeight.push(height);
+                }
+            }
+        },
+        watch:{
+            data(){
+                setTimeout(()=>{
+                    //数据变化到dom变化 缓存时间
+                    this._calculateHeight()
+                },20)
+            },
+            scrollY(newY){
+                const listHeight = this.listHeight;
+                //当滚动到顶部,newY>0
+                if(newY>0){
+                    this.currentIndex = 0;
+                    return
+                }
+                //在中间部分滚动
+                for(var i=0;i<listHeight.length-1;i++){
+                    let height1 = listHeight[i];
+                    let height2 = listHeight[i+1];
+                    if(-newY >= height1 && -newY<height2){
+                        this.currentIndex = i;
+                        return;
+                    }
+                }
+                //当滚动到底部,且-newY大于最后一个元素的上限
+                this.currentIndex = listHeight-2;
             }
         }
     }
@@ -122,7 +189,10 @@ ul{
     color: rgba(255, 255, 255, 0.5);
     font-size: 10px;
 }
-.list-fixed{
+.listview .list-shortcut .item.current{
+    color:#ffcd32;
+}
+/* .list-fixed{
     position: absolute;
     top: 0;
     left: 0;
@@ -135,7 +205,7 @@ ul{
     font-size: 12px;
     color: rgba(255, 255, 255, 0.5);
     background: #333;
-}
+} */
 .loading-container{
     position: absolute;
     width: 100%;

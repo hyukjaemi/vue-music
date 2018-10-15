@@ -1,69 +1,71 @@
 <template>
   <transition name="slide">
-    <music-list :title="title" :bg-image="bgImage" :songs="songs"></music-list>
+    <music-list :songs="songs" :title="title" :bg-image="bgImage"></music-list>
   </transition>
 </template>
 
-<script type="text/ecmascript-6">
-  import MusicList from 'components/music-list/music-list'
-  import {getSingerDetail} from 'api/singer'
-  import {ERR_OK} from 'api/config'
-  import {createSong} from 'common/js/song'
-  import {mapGetters} from 'vuex'
-
+<script>
+import {mapGetters} from 'vuex';
+import {getSingerDetail} from '../../api/singer.js';
+import {createSong} from '../../common/js/song';
+import musicList from '../music-list/music-list';
   export default {
-    computed: {
-      title() {
+    data(){
+      return {
+        songs:[]
+      }
+    },
+    computed:{
+      title(){
         return this.singer.name
       },
-      bgImage() {
+      bgImage(){
         return this.singer.avatar
       },
       ...mapGetters([
         'singer'
       ])
     },
-    data() {
-      return {
-        songs: []
-      }
-    },
-    created() {
-      this._getDetail()
-    },
-    methods: {
-      _getDetail() {
-        if (!this.singer.id) {
+    methods:{
+      getDetail(){
+        //当前页面刷新获得不到数据,回退到上一级
+        if(!this.singer.id){
           this.$router.push('/singer')
           return
         }
-        getSingerDetail(this.singer.id).then((res) => {
-          if (res.code === ERR_OK) {
-            this.songs = this._normalizeSongs(res.data.list)
+        getSingerDetail(this.singer.id).then(res=>{
+          if(res.code==0){
+            this.songs = this.Songs(res.data.list)
+            console.log(this.songs);
           }
         })
       },
-      _normalizeSongs(list) {
-        let ret = []
+      Songs(list){
+        var ret = [];
         list.forEach((item) => {
-          let {musicData} = item
-          if (musicData.songid && musicData.albummid) {
+          var {musicData} = item;
+          if(musicData.songid && musicData.albummid){
             ret.push(createSong(musicData))
           }
         })
         return ret
       }
     },
-    components: {
-      MusicList
+    created(){
+      this.getDetail();
+    },
+    components:{
+      musicList
     }
   }
 </script>
 
-<style scoped lang="stylus" rel="stylesheet/stylus">
-  .slide-enter-active, .slide-leave-active
-    transition: all 0.3s
-
-  .slide-enter, .slide-leave-to
-    transform: translate3d(100%, 0, 0)
+<style>
+  .slide-enter-active, .slide-leave-active{
+    transition: all 0.3s;
+  }
+  .slide-enter, .slide-leave-to{
+    transform: translate3d(100%, 0, 0)   
+  }
+    
 </style>

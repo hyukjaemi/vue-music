@@ -2,6 +2,7 @@ import 'babel-polyfill'
 import Vue from 'vue'
 import App from './App'
 import router from './router'
+import store from './store'
 import axios from 'axios'
 import fastclick from 'fastclick';
 import MintUI from 'mint-ui';
@@ -23,6 +24,7 @@ Vue.http.options.emulateJSON = true;
 Vue.prototype.$axios = axios;
 new Vue({
   el: '#app',
+  store,
   router,
   render: h => h(App)
 })

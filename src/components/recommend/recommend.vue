@@ -16,7 +16,7 @@
             <ul>
               <li v-for="item in playList" :key="item.id" class="list-item">
                 <div class="icon">
-                  <img :src="item.coverImgUrl" width="70" height="70">
+                  <img v-lazy="item.coverImgUrl" width="70" height="70">
                 </div>
                 <div class="text">
                   <h4 class="name" v-html="item.name"></h4>
@@ -57,8 +57,7 @@
       getPlaylist(){
         var url = `/api/top/playlist/highquality?limit=15`;
         this.$axios.get(url).then(result=>{
-              this.playList = result.data.playlists;
-            
+              this.playList = result.data.playlists;    
         })
       }
     },

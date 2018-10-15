@@ -1,12 +1,14 @@
 <template>
   <div class="singer" ref="singer">
-    <list-view :data="Singers"></list-view>
+    <list-view :data="Singers" @select="selectSinger"></list-view>
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
   import {getSingerList} from '../../api/singer.js';
   import ListView from '../../base/listview';
+  import {mapMutations} from 'vuex';
   var HOT_NAME = "热门";
   var length = 10;
   export default {
@@ -19,6 +21,12 @@
       this._getSingerList()
     },
     methods: {
+      selectSinger(singer){
+        this.$router.push({
+          path:`/singer/${singer.id}`
+        })
+        this.setSinger(singer)
+      },
       _getSingerList(){
         getSingerList().then(result=>{
           if(result.code == 0){
@@ -28,7 +36,7 @@
       },
       //两个列表 热门和字母排列  字母排列内部
       Singer(list){
-        var map = {
+        let map = {
           hot:{
             title: HOT_NAME,
             items:[]
@@ -42,7 +50,7 @@
               avatar:`https://y.gtimg.cn/music/photo_new/T001R300x300M000${item.Fsinger_mid}.jpg?max_age=2592000`
             })
           }
-          var key = item.Findex;
+          let key = item.Findex;
           if(!map[key]){
             map[key]={
               title:key,
@@ -70,7 +78,10 @@
           return a.title.charCodeAt(0) - b.title.charCodeAt(0)
         })
         return hot.concat(ret)
-      }
+      },
+      ...mapMutations({
+        setSinger:'SET_SINGER'
+      })
     },
     components: {
      ListView
