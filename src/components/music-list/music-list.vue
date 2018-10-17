@@ -15,7 +15,7 @@
     </div>
     <scroll  :data="songs" class="list" ref="list">
       <div class="song-list-wrapper">
-        <song-list :songs="songs" @select="selectItem"></song-list>
+        <song-list :songs="songs" @select="selectItem" :rank="rank"></song-list>
       </div>
     </scroll>
   </div>
@@ -40,6 +40,10 @@ import {playlistMixin} from '../../common/js/mixin'
       title:{
         type:String,
         default:""
+      },
+      rank:{
+        type:Boolean,
+        default:false
       }
     },
     computed:{

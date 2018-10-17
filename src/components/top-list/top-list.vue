@@ -4,25 +4,24 @@
   </transition>
 </template>
 
-<script type="text/ecmascript-6">
-  import MusicList from 'components/music-list/music-list'
-  import {getMusicList} from 'api/rank'
-  import {ERR_OK} from 'api/config'
+<script>
+  import MusicList from '../music-list/music-list'
   import {mapGetters} from 'vuex'
-  import {createSong} from 'common/js/song'
+  import {createSong} from '../../common/js/song'
+  import {getMusicList} from '../../api/rank';
 
   export default {
     computed: {
-      title() {
+      title(){
         return this.topList.topTitle
       },
-      bgImage() {
-        if (this.songs.length) {
-          return this.songs[0].image
+      bgImage(){
+        if(this.songs.length){
+          return this.songs[0].image;
         }
-        return ''
+        return '';
       },
-      ...mapGetters([
+    ...mapGetters([
         'topList'
       ])
     },
@@ -36,22 +35,22 @@
       this._getMusicList()
     },
     methods: {
-      _getMusicList() {
-        if (!this.topList.id) {
-          this.$router.push('/rank')
-          return
-        }
-        getMusicList(this.topList.id).then((res) => {
-          if (res.code === ERR_OK) {
-            this.songs = this._normalizeSongs(res.songlist)
+     _getMusicList(){
+       if(!this.topList.id){
+         this.$router.push('/rank')
+         return 
+       }
+        getMusicList(this.topList.id).then((res)=>{
+          if(res.code==0){
+            this.songs = this.Songs(res.songlist)
           }
         })
       },
-      _normalizeSongs(list) {
+      Songs(list){
         let ret = []
-        list.forEach((item) => {
-          const musicData = item.data
-          if (musicData.songid && musicData.albummid) {
+        list.forEach((item)=>{
+          const musicData = item.data;
+          if(musicData.songid && musicData.albumid){
             ret.push(createSong(musicData))
           }
         })
@@ -64,10 +63,12 @@
   }
 </script>
 
-<style scoped lang="stylus" rel="stylesheet/stylus">
-  .slide-enter-active, .slide-leave-active
-    transition: all 0.3s ease
+<style>
+  .slide-enter-active, .slide-leave-active{
+    transition: all 0.3s ease;
+  }
 
-  .slide-enter, .slide-leave-to
-    transform: translate3d(100%, 0, 0)
+  .slide-enter, .slide-leave-to{
+    transform: translate3d(100%, 0, 0);
+  }
 </style>

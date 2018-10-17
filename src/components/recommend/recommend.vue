@@ -14,7 +14,7 @@
           <div class="recommend-list">
             <h2 class="list-title">热门歌单推荐</h2>
             <ul>
-              <li v-for="item in playList" :key="item.id" class="list-item">
+              <li v-for="item in playList" :key="item.id" class="list-item" @click="selectItem(item)">
                 <div class="icon">
                   <img v-lazy="item.imgurl" width="70" height="70">
                 </div>
@@ -35,7 +35,8 @@
   import Scroll from '../../base/scroll'
   import {getRecommend,getPlaylist} from '../../api/recommend.js';
   import {playlistMixin} from '../../common/js/mixin'
-  
+  import {mapMutations} from 'vuex'
+
   export default {
     mixins:[playlistMixin],
     data() {
@@ -64,15 +65,19 @@
       _getPlaylist(){
         getPlaylist().then(res=>{
           if(res.code == 0){
-            console.log(res.data.list);
             this.playList = res.data.list;
           }
         })
-        /* var url = `/api/top/playlist/highquality?limit=15`;
-        this.$axios.get(url).then(result=>{
-              this.playList = result.data.playlists;     
-        })*/
-      }
+      },
+      selectItem(item){
+        this.$router.push({
+          path:`/recommend/${item.dissid}`
+        })
+        this.setDisc(item)
+      },
+      ...mapMutations({
+        setDisc:"SET_DISC"
+      })
     },
     components:{
       Scroll
