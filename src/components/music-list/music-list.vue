@@ -6,7 +6,8 @@
     <h1 class="title" v-html="title"></h1>
     <div class="bg-image" :style="bgStyle" ref="bgImage">
       <div class="play-wrapper">
-        <div class="play" v-show="songs.length>0">
+        <div class="play" v-show="songs.length>0" ref="playBtn" @click="random">
+          <i class="icon-play"></i>
           <span class="text">随机播放全部</span>
         </div>
       </div>
@@ -14,7 +15,7 @@
     </div>
     <scroll  :data="songs" class="list" ref="list">
       <div class="song-list-wrapper">
-        <song-list :songs="songs"></song-list>
+        <song-list :songs="songs" @select="selectItem"></song-list>
       </div>
     </scroll>
   </div>
@@ -22,8 +23,11 @@
 
 <script>
 import Scroll from '../../base/scroll';
-import SongList from '../../base/song-list'
+import SongList from '../../base/song-list';
+import {mapActions} from 'vuex'
+import {playlistMixin} from '../../common/js/mixin'
   export default {
+    mixins:[playlistMixin],
     props:{
       bgImage:{
         type:String,
@@ -51,9 +55,29 @@ import SongList from '../../base/song-list'
       SongList
     },
     methods:{
+      handlePlaylist(playlist){
+        const bottom = playlist.length > 0 ? '60px' :''
+        this.$refs.list.$el.style.bottom = bottom ;
+        this.$refs.list.refresh()
+      },
       back(){
         this.$router.back()
-      }
+      },
+      selectItem(item, index) {
+        this.selectPlay({
+          list: this.songs,
+          index
+        })
+      },
+      random(){
+        this.randomPlay({
+          list:this.songs
+        })
+      },
+      ...mapActions([
+        'selectPlay',
+        'randomPlay'
+      ])
     }
   }
 </script>
@@ -75,15 +99,10 @@ import SongList from '../../base/song-list'
       z-index: 50;
     }
   .music-list .back .icon-back{
-      display: block;
-      padding: 8px;
-      margin:25px 15px;
-      color: #ffcd32;
-  }
-  i{
-    border-bottom: 1px solid #ffcd32;
-    border-left: 1px solid #ffcd32;
-    transform: rotate(45deg);
+    display: block;
+    padding: 10px;
+    font-size: 22px;
+    color: #ffcd32;
   }
   .music-list .title{
       position: absolute;
@@ -124,6 +143,12 @@ import SongList from '../../base/song-list'
           border-radius: 100px;
           font-size: 0;
         }
+  .icon-play{
+          display: inline-block;
+          vertical-align: middle;
+          margin-right: 6px;
+          font-size: 16px;
+  }
   .music-list .bg-image .play-wrapper .play .text{
             display: inline-block;
             vertical-align: middle;

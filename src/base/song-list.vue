@@ -1,7 +1,7 @@
 <template>
     <div class="song-list">
         <ul>
-            <li v-for="song in songs" :key="song.id" class="item">
+            <li @click="selectItem(song, index)" class="item" v-for="(song, index) in songs" :key="song.id">
                 <div class="content">
                     <h2 class="name">{{song.name}}</h2>
                     <p class="desc">{{getDesc(song)}}</p>
@@ -19,69 +19,67 @@
             }
         },
         methods:{
-            getDesc(song){
-                console.log(song);
+            selectItem(item, index) {
+                this.$emit('select', item, index)
+            },
+            getDesc(song) {
                 return `${song.singer}·${song.album}`
             }
         }
     }
 </script>
 <style>
-.item{
+.song-list .item{
     display: flex;
     align-items: center;
     box-sizing: border-box;
     height: 60px;
     font-size: 12px;
 }
-.item .rank{
+.song-list .item .rank{
     flex: 0 0 25px;
     width: 25px;
     margin-right: 30px;
     text-align: center;
 }
-.item .rank .icon{
+.song-list .item .rank .icon{
     display: inline-block;
     width: 25px;
     height: 24px;
     background-size: 25px 24px;
 }
-.item .rank .icon.icon0{
+.song-list .item .rank .icon.icon0{
     background-image: url('../common/image/first.png')
 }
-.item .rank .icon.icon1{
+.song-list .item .rank .icon.icon1{
     background-image: url('../common/image/second.png')
 }
-.item .rank .icon.icon2{
+.song-list .item .rank .icon.icon2{
     background-image: url('../common/image/third.png')
 }
-.item .rank .text{
+.song-list .item .rank .text{
     color:#ffcd32;
     font-size: 18px;
 }
-.item .content{
+.song-list .item .content{
     flex: 1;
     line-height: 20px;
     overflow: hidden;
 }
-.item .content .name{
+.song-list .item .content .name{
     display: flex;
     text-overflow: ellipsis;
-    overflow: hidden;
     white-space: nowrap;
     color:rgba(255, 255, 255, 0.8);
     padding: 0;
-    margin: 0;
+    margin:4px;
     font-weight: 100;
 }
-.item .content .desc{
+.song-list .item .content .desc{
     display: flex;
     text-overflow: ellipsis;
-    overflow: hidden;
     white-space: nowrap;
     margin-top: 4px;
     color: rgba(255,255,255,0.3);
-    padding: 0;
-    margin: 0;
 }
 </style>

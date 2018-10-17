@@ -16,11 +16,11 @@
             <ul>
               <li v-for="item in playList" :key="item.id" class="list-item">
                 <div class="icon">
-                  <img v-lazy="item.coverImgUrl" width="70" height="70">
+                  <img v-lazy="item.imgurl" width="70" height="70">
                 </div>
                 <div class="text">
-                  <h4 class="name" v-html="item.name"></h4>
-                  <p class="desc" v-html="item.copywriter"></p>
+                  <h4 class="name" v-html="item.creator.name"></h4>
+                  <p class="desc" v-html="item.dissname"></p>
                 </div>
               </li>
             </ul>
@@ -33,9 +33,11 @@
 
 <script type="text/ecmascript-6">
   import Scroll from '../../base/scroll'
-  import {getRecommend} from '../../api/recommend.js';
+  import {getRecommend,getPlaylist} from '../../api/recommend.js';
+  import {playlistMixin} from '../../common/js/mixin'
   
   export default {
+    mixins:[playlistMixin],
     data() {
       return {
         imgList:[],
@@ -44,9 +46,14 @@
     },
     created() {
       this._getRecommend()
-      this.getPlaylist()
+      this._getPlaylist()
     },
     methods: {
+      handlePlaylist(playlist){
+        const bottom = playlist.length > 0 ? '60px' :''
+        this.$refs.recommend.style.bottom = bottom ;
+        this.$refs.scroll.refresh();
+      },
       _getRecommend(){
         getRecommend().then((res)=>{
           if(res.code == 0){
@@ -54,11 +61,17 @@
           }
         })
       },
-      getPlaylist(){
-        var url = `/api/top/playlist/highquality?limit=15`;
-        this.$axios.get(url).then(result=>{
-              this.playList = result.data.playlists;    
+      _getPlaylist(){
+        getPlaylist().then(res=>{
+          if(res.code == 0){
+            console.log(res.data.list);
+            this.playList = res.data.list;
+          }
         })
+        /* var url = `/api/top/playlist/highquality?limit=15`;
+        this.$axios.get(url).then(result=>{
+              this.playList = result.data.playlists;     
+        })*/
       }
     },
     components:{
@@ -108,7 +121,7 @@
     flex: 1;
     line-height: 20px;
     overflow: hidden;
-    font-size: 12px;
+    font-size: 16px;
   }
   ul li.list-item .name{
     margin-top: 0;

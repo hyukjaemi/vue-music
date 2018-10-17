@@ -6,7 +6,7 @@
 
 <script>
 import {mapGetters} from 'vuex';
-import {getSingerDetail} from '../../api/singer.js';
+import {getSingerDetail,getSongVkey} from '../../api/singer.js';
 import {createSong} from '../../common/js/song';
 import musicList from '../music-list/music-list';
   export default {
@@ -36,7 +36,6 @@ import musicList from '../music-list/music-list';
         getSingerDetail(this.singer.id).then(res=>{
           if(res.code==0){
             this.songs = this.Songs(res.data.list)
-            console.log(this.songs);
           }
         })
       },
@@ -44,9 +43,12 @@ import musicList from '../music-list/music-list';
         var ret = [];
         list.forEach((item) => {
           var {musicData} = item;
-          if(musicData.songid && musicData.albummid){
-            ret.push(createSong(musicData))
-          }
+          getSongVkey(musicData.songmid).then(result=>{
+            const vkey = result.data.items[0].vkey;
+            if(musicData.songid && musicData.albummid){
+              ret.push(createSong(musicData,vkey))
+            }
+          })
         })
         return ret
       }
