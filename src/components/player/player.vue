@@ -64,7 +64,7 @@
               <i class="icon-next" @click="next"></i>
             </div>
             <div class="icon i-right">
-              <i class="icon icon-not-favorite"></i>
+              <i class="icon icon-favorite"></i>
             </div>
           </div>
         </div>
@@ -79,7 +79,7 @@
           <h2 class="name" v-html="currentSong.name"></h2>
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
-        <div class="control">
+        <div class="control" @click.stop="showPlaylist">
             <i @click.stop="togglePlaying" :class="miniIcon"></i> 
         </div>
         <div class="control" @click.stop="showPlaylist">
@@ -87,7 +87,7 @@
         </div>
       </div>
     </transition>
-    <!-- <playlist ref="playlist"></playlist> -->
+    <playlist ref="playlist"></playlist>
     <audio ref="audio" :src="currentSong.url" 
             @timeupdate="updateTime" @ended="end">
     </audio>
@@ -101,7 +101,8 @@ import {playMode} from '../../common/js/config';
 import {shuffle} from '../../common/js/util';
 import Lyric from 'lyric-parser';
 import Scroll from '../../base/scroll';
-import {prefixStyle} from '../../common/js/dom'
+import {prefixStyle} from '../../common/js/dom';
+import Playlist from '../playlist/playlist';
 
 const transform = prefixStyle('transform');
 const transitionDuration = prefixStyle('transitionDuration');
@@ -217,6 +218,9 @@ const transitionDuration = prefixStyle('transitionDuration');
           this.currentLyric.seek(currentTime * 1000);
         }
       },
+      showPlaylist(){
+        this.$refs.playlist.show();
+      },
       _pad(num,n = 2){
         //给秒数补位
         let len = num.toString().length;
@@ -327,28 +331,43 @@ const transitionDuration = prefixStyle('transitionDuration');
       })
     },
     watch:{
-      currentSong(newSong,oldSong){
-        if(newSong.id === oldSong.id){
-          return 
+      currentSong(newSong, oldSong) {
+        if (!newSong.id) {
+          return
         }
-        if(this.currentLyric){
+        if (newSong.id === oldSong.id) {
+          return
+        }
+        if (this.currentLyric) {
           this.currentLyric.stop()
+          this.currentTime = 0
+          this.playingLyric = ''
+          this.currentLineNum = 0
         }
-        setTimeout(()=>{
+        clearTimeout(this.timer)
+        this.timer = setTimeout(() => {
           this.$refs.audio.play()
           this.getLyric()
-        },1000)
+        }, 1000)
       },
-      playing(newPlaying){
-        const audio = this.$refs.audio;
-        this.$nextTick(()=>{
-           newPlaying ? audio.play() : audio.pause();
+      playing(newPlaying) {
+        const audio = this.$refs.audio
+        this.$nextTick(() => {
+          newPlaying ? audio.play() : audio.pause()
         })
+      },
+      fullScreen(newVal) {
+        if (newVal) {
+          setTimeout(() => {
+            this.$refs.lyricList.refresh()
+          }, 20)
+        }
       }
     },
     components:{
       ProgressBar,
-      Scroll
+      Scroll,
+      Playlist
     }
   }
 </script>

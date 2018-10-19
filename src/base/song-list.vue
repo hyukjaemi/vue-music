@@ -105,6 +105,9 @@
   overflow: hidden;
   white-space: nowrap;
   color: #fff;
+  margin: 0;
+  font-weight: 100;
+  font-size: 20px;
 }
 .song-list .item .content .desc {
   text-overflow: ellipsis;

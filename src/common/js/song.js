@@ -44,7 +44,7 @@ export function createSong(musicData,vkey) {
   })
 }
 
-function filterSinger(singer){
+export function filterSinger(singer){
   var ret =[];
   if(!singer){
       return ''

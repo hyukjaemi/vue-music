@@ -1,4 +1,4 @@
-import {mapGetters} from 'vuex'
+import {mapGetters,mapActions} from 'vuex'
 export const playlistMixin = {
     computed:{
     ...mapGetters([
