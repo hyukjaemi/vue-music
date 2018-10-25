@@ -6,23 +6,23 @@
           <h1 class="title">
             <i class="icon" ></i>
             <span class="text"></span>
-            <span class="clear"><i class="icon-clear"></i></span>
+            <span class="clear" @click="showConfirm"><i class="icon-clear"></i></span>
           </h1>
         </div>
         <scroll ref="listContent" class="list-content" :data="sequenceList">
-          <div ref="listItem" name="list" tag="ul">
-            <li  class="item" v-for="(item,index) in sequenceList" :key="item.id"
+          <transition-group name="list" tag="ul">
+            <li ref="listItem" class="item" v-for="(item,index) in sequenceList" :key="item.id"
                 @click="selectItem(item,index)">
               <i class="current" :class="getCurrentIcon(item)"></i>
               <span class="text">{{item.name}}</span>
               <span class="like">
                 <i class="icon-not-favorite"></i>
               </span>
-              <span class="delete"> 
+              <span class="delete" @click.stop="deleteOne(item)"> 
                 <i class="icon-delete"></i>
               </span>
             </li>
-          </div>
+          </transition-group>
         </scroll>
         <div class="list-operate">
           <div class="add">
@@ -34,6 +34,8 @@
           <span>关闭</span>
         </div>
       </div>
+      <confirm ref="confirm" text="是否清空播放列表" confirmBtnText="清空"
+              @confirm="confirmClear"></confirm>
     </div>
   </transition>
 </template>
@@ -42,11 +44,21 @@
   import Scroll from '../../base/scroll';
   import {mapGetters, mapMutations,mapActions} from 'vuex';
   import {playMode} from '../../common/js/config';
+  import Confirm from '../../base/confirm';
+
   export default {
     data(){
       return{
         showFlag:false
       }
+    },
+    computed:{
+      ...mapGetters([
+        'sequenceList',
+        'currentSong',
+        'playlist',
+        'mode'
+      ])
     },
     methods:{
       show(){
@@ -80,23 +92,28 @@
         })
         this.$refs.listContent.scrollToElement(this.$refs.listItem[index],300)
       },
+      deleteOne(item){
+        this.deleteSong(item);
+      },
+      showConfirm(){
+        this.$refs.confirm.show()
+      },
+      confirmClear(){
+        this.deleteSonglist();
+        this.hide()
+      },
       ...mapMutations({
         setCurrentIndex:'SET_CURRENT_INDEX',
         setPlayingState:'SET_PLAYING_STATE'
       }),
       ...mapActions([
-        'deleteSong'
+        'deleteSong',
+        'deleteSonglist'
       ])
     },
     components:{
-      Scroll
-    },
-    computed:{
-      ...mapGetters([
-        'sequenceList',
-        'currentSong',
-        'mode'
-      ])
+      Scroll,
+      Confirm
     },
     watch:{
       currentSong(newSong,oldSong){

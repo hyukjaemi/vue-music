@@ -3,20 +3,22 @@
     <scroll ref="scroll" class="recommend-content" :data="playList">
         <div>
           <!-- 轮播图 -->
-          <mt-swipe :auto="4000" v-if="imgList.length">
-            <mt-swipe-item  v-for="item in imgList" :key="item.id">
-              <a :href="item.linkUrl">
-                <img :src="item.picUrl">
-              </a>
-            </mt-swipe-item>
-          </mt-swipe>
+          <div v-if="imgList.length" class="slider-wrapper" ref="sliderWrapper">
+            <slider>
+              <div v-for="item in imgList" :key="item.id">
+                <a :href="item.linkUrl">
+                  <img class="needsclick" @load="loadImage" :src="item.picUrl">
+                </a>
+              </div>
+            </slider>
+          </div>
           <!-- 歌单推荐 -->
           <div class="recommend-list">
             <h2 class="list-title">热门歌单推荐</h2>
             <ul>
               <li v-for="item in playList" :key="item.id" class="list-item" @click="selectItem(item)">
                 <div class="icon">
-                  <img v-lazy="item.imgurl" width="70" height="70">
+                  <img v-lazy="item.imgurl" width="60" height="60">
                 </div>
                 <div class="text">
                   <h4 class="name" v-html="item.creator.name"></h4>
@@ -26,13 +28,18 @@
             </ul>
           </div>
         </div>
+        <div class="loading-container" v-show="!playList.length">
+        <loading></loading>
+    </div>
     </scroll>
     <router-view></router-view>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
+  import Slider from '../../base/slider'
   import Scroll from '../../base/scroll'
+  import Loading from '../../base/loading'
   import {getRecommend,getPlaylist} from '../../api/recommend.js';
   import {playlistMixin} from '../../common/js/mixin'
   import {mapMutations} from 'vuex'
@@ -54,6 +61,12 @@
         const bottom = playlist.length > 0 ? '60px' :''
         this.$refs.recommend.style.bottom = bottom ;
         this.$refs.scroll.refresh();
+      },
+      loadImage(){
+        if (!this.checkloaded) {
+          this.checkloaded = true;
+          this.$refs.scroll.refresh();
+        }
       },
       _getRecommend(){
         getRecommend().then((res)=>{
@@ -80,7 +93,9 @@
       })
     },
     components:{
-      Scroll
+      Scroll,
+      Slider,
+      Loading
     }
   }
 </script>

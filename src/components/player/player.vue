@@ -54,17 +54,17 @@
             <div class="icon i-left" @click="changeMode">
               <i :class="iconMode"></i>
             </div>
-            <div class="icon i-left">
+            <div class="icon i-left" :class="disableCls">
               <i class="icon-prev" @click="prev"></i>
             </div>
-            <div class="icon i-center" >
+            <div class="icon i-center" :class="disableCls">
               <i :class="playIcon" @click="togglePlaying"></i>
             </div>
-            <div class="icon i-right">
+            <div class="icon i-right" :class="disableCls">
               <i class="icon-next" @click="next"></i>
             </div>
             <div class="icon i-right">
-              <i class="icon icon-favorite"></i>
+              <i class="icon" @click="toggleFavorite(currentSong)" :class="getFavoriteIcon(currentSong)"></i>
             </div>
           </div>
         </div>
@@ -88,25 +88,27 @@
       </div>
     </transition>
     <playlist ref="playlist"></playlist>
-    <audio ref="audio" :src="currentSong.url" 
+    <audio ref="audio" :src="currentSong.url" @play="ready" @error="error"
             @timeupdate="updateTime" @ended="end">
     </audio>
   </div>
 </template>
 
 <script>
-import {mapGetters,mapMutations} from 'vuex';
+import {mapGetters,mapMutations,mapActions} from 'vuex';
 import ProgressBar from '../../base/progress-bar';
 import {playMode} from '../../common/js/config';
 import {shuffle} from '../../common/js/util';
 import Lyric from 'lyric-parser';
 import Scroll from '../../base/scroll';
+import {playerMixin} from '../../common/js/mixin'
 import {prefixStyle} from '../../common/js/dom';
 import Playlist from '../playlist/playlist';
 
 const transform = prefixStyle('transform');
 const transitionDuration = prefixStyle('transitionDuration');
   export default {
+    mixins: [playerMixin],
     data() {
       return {
        songReady:false,
@@ -127,21 +129,16 @@ const transitionDuration = prefixStyle('transitionDuration');
       cdCls() {
         return this.playing ? 'play' : 'play pause';
       },
+      disableCls() {
+        return this.songReady ? '' : 'disable'
+      },
       percent(){
         return this.currentTime / this.currentSong.duration;
       },
-      iconMode(){
-        return this.mode === playMode.sequence ? "icon-sequence" : 
-        this.mode === playMode.loop ? "icon-loop" : "icon-random"
-      },
       ...mapGetters([
         'fullScreen',
-        'playlist',
-        'currentSong',
         'playing',
         'currentIndex',
-        "mode",
-        "sequenceList"
       ])
     },
     created(){
@@ -168,8 +165,12 @@ const transitionDuration = prefixStyle('transitionDuration');
         }
       },
       prev(){
+        if (!this.songReady) {
+          return
+        }
         if(this.playlist.length==1){
-          this.loop()
+          this.loop();
+          return;
         }else{
           var index = this.currentIndex-1;
           if(index === -1){
@@ -178,10 +179,15 @@ const transitionDuration = prefixStyle('transitionDuration');
           this.setCurrentIndex(index)
           if(!this.playing) this.togglePlaying();
         }
+        this.songReady = false;
       },
       next(){
+        if (!this.songReady) {
+          return
+        }
         if(this.playlist.length==1){
           this.loop()
+          return ;
         }else{
           var index = this.currentIndex+1;
           if(index === this.playlist.length){
@@ -190,6 +196,7 @@ const transitionDuration = prefixStyle('transitionDuration');
           this.setCurrentIndex(index)
           if(!this.playing) this.togglePlaying();
         }
+        this.songReady = false
       },
       loop(){
         this.$ref.audio.currentTime = 0;
@@ -197,6 +204,13 @@ const transitionDuration = prefixStyle('transitionDuration');
         if(this.currentLyric){
           this.currentLyric.seek(0)
         }
+      },
+      ready() {
+        this.songReady = true
+        this.savePlayHistory(this.currentSong)
+      },
+      error() {
+        this.songReady = true
       },
       updateTime(e){
         this.currentTime = e.target.currentTime
@@ -230,26 +244,11 @@ const transitionDuration = prefixStyle('transitionDuration');
         }
         return num
       },
-      changeMode(){
-        const mode = (this.mode + 1)%3;
-        this.setPlayMode(mode);
-        let list = null;
-        if(mode === playMode.random){
-          list = shuffle(this.sequenceList)
-        }else{
-          list = this.sequenceList;
-        }
-        this.resetCurrentIndex(list)
-        this.setPlayList(list)
-      },
-      resetCurrentIndex(list){
-        let index = list.findIndex((item)=>{
-          return item.id === this.currentSong.id
-        })
-        this.setCurrentIndex(index)
-      },
       getLyric(){
         this.currentSong.getLyric().then((lyric)=>{
+          if (this.currentSong.lyric !== lyric) {
+            return
+          }
           this.currentLyric = new Lyric(lyric,this.handleLyric)
           if(this.playing){
             this.currentLyric.play()
@@ -324,11 +323,10 @@ const transitionDuration = prefixStyle('transitionDuration');
       },
       ...mapMutations({
         setFullScreen:'SET_FULL_SCREEN',
-        setPlayingState:'SET_PLAYING_STATE',
-        setCurrentIndex:'SET_CURRENT_INDEX',
-        setPlayMode:"SET_PLAY_MODE",
-        setPlayList:"SET_PLAYLIST"
-      })
+      }),
+      ...mapActions([
+        'savePlayHistory'
+      ])
     },
     watch:{
       currentSong(newSong, oldSong) {

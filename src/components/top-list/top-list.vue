@@ -8,6 +8,7 @@
   import MusicList from '../music-list/music-list'
   import {mapGetters} from 'vuex'
   import {createSong} from '../../common/js/song'
+  import {getSongVkey} from '../../api/singer'
   import {getMusicList} from '../../api/rank';
 
   export default {
@@ -50,9 +51,12 @@
         let ret = []
         list.forEach((item)=>{
           const musicData = item.data;
-          if(musicData.songid && musicData.albumid){
-            ret.push(createSong(musicData))
-          }
+          getSongVkey(musicData.songmid).then(result=>{
+            const vkey = result.data.items[0].vkey;
+            if(musicData.songid && musicData.albumid){
+              ret.push(createSong(musicData,vkey))
+            }
+          })
         })
         return ret
       }

@@ -36,6 +36,7 @@
   border: 1px solid #333;
   border-radius: 5px;
   list-style: none;
+  padding: 0;
 }
 .switches .switch-item {
   flex: 1;
